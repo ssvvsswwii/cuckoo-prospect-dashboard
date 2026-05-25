@@ -6,8 +6,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  const user = session!.user
+  const user = (await import('@/lib/supabase/server')).getSessionUser()!
+
 
   const { data: profile } = await supabase
     .from('profiles')

@@ -1,30 +1,24 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser, createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/ui/Sidebar'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const user = getSessionUser()
+  if (!user) redirect('/auth/login')
+
   const supabase = createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-
-  if (!session) redirect('/auth/login')
-
   const { data: profile } = await supabase
     .from('profiles')
     .select('*, branch:branches(name)')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
-  if (!profile || profile.status !== 'active') {
-    await supabase.auth.signOut()
-    redirect('/auth/login')
-  }
+  if (!profile || profile.status !== 'active') redirect('/auth/login')
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar profile={profile} />
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   )
 }

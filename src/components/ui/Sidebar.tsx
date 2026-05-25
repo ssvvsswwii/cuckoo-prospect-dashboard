@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePathname } from 'next/navigation'
 import type { Profile } from '@/lib/types'
 
 const navItems = (role: string) => {
@@ -27,12 +26,10 @@ const roleLabel: Record<string, string> = {
 
 export default function Sidebar({ profile }: { profile: Profile & { branch?: { name: string } } }) {
   const pathname = usePathname()
-  const router   = useRouter()
 
   async function signOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/auth/login')
+    await fetch('/api/auth/set-session', { method: 'DELETE' })
+    window.location.href = '/auth/login'
   }
 
   return (
