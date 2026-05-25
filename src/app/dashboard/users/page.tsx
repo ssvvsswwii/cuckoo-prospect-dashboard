@@ -1,14 +1,19 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import UsersTable from '@/components/ui/UsersTable'
 
 export const dynamic = 'force-dynamic'
 
 export default async function UsersPage() {
-  const supabase = createClient()
-  const user = (await import('@/lib/supabase/server')).getSessionUser()!
+  const user = getSessionUser()!
+  const supabase = createAdminClient()
 
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user!.id).single()
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
   if (me?.role !== 'admin') redirect('/dashboard')
 
   const { data: profiles } = await supabase
@@ -16,7 +21,10 @@ export default async function UsersPage() {
     .select('*, branch:branches(name)')
     .order('created_at', { ascending: false })
 
-  const { data: branches } = await supabase.from('branches').select('*').order('name')
+  const { data: branches } = await supabase
+    .from('branches')
+    .select('*')
+    .order('name')
 
   return (
     <div className="p-6 md:p-8">
@@ -25,7 +33,6 @@ export default async function UsersPage() {
         <p className="text-gray-500 text-sm mt-1">Approve, activate, or manage dashboard users</p>
       </div>
 
-      {/* Pending count */}
       {(() => {
         const pending = profiles?.filter(p => p.status === 'pending').length ?? 0
         return pending > 0 ? (
@@ -40,7 +47,7 @@ export default async function UsersPage() {
       })()}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <UsersTable profiles={profiles ?? []} branches={branches ?? []} currentUserId={user!.id} />
+        <UsersTable profiles={profiles ?? []} branches={branches ?? []} currentUserId={user.id} />
       </div>
     </div>
   )

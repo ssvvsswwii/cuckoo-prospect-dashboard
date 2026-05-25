@@ -1,14 +1,19 @@
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import BranchesPanel from '@/components/ui/BranchesPanel'
 
 export const dynamic = 'force-dynamic'
 
 export default async function BranchesPage() {
-  const supabase = createClient()
-  const user = (await import('@/lib/supabase/server')).getSessionUser()!
+  const user = getSessionUser()!
+  const supabase = createAdminClient()
 
-  const { data: me } = await supabase.from('profiles').select('role').eq('id', user!.id).single()
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
   if (!['admin', 'branch_manager'].includes(me?.role)) redirect('/dashboard')
 
   const { data: branches } = await supabase
