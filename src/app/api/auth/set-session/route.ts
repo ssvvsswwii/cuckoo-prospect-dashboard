@@ -1,42 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 
-// POST /api/auth/set-session — called by login page after signInWithPassword
+// POST — set session cookies directly on the response object
 export async function POST(request: NextRequest) {
   const { access_token, refresh_token, expires_in } = await request.json()
 
   if (!access_token) {
-    return NextResponse.json({ error: 'No token provided' }, { status: 400 })
+    return NextResponse.json({ error: 'No token' }, { status: 400 })
   }
 
-  const cookieStore = cookies()
-  const secure = process.env.NODE_ENV === 'production'
+  const res = NextResponse.json({ success: true })
+  const secure = true // always secure on Vercel
 
-  cookieStore.set('sb-access-token', access_token, {
-    path: '/',
-    maxAge: expires_in ?? 3600,
+  res.cookies.set('sb-access-token', access_token, {
+    path:     '/',
+    maxAge:   expires_in ?? 3600,
     sameSite: 'lax',
     secure,
     httpOnly: true,
   })
 
   if (refresh_token) {
-    cookieStore.set('sb-refresh-token', refresh_token, {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+    res.cookies.set('sb-refresh-token', refresh_token, {
+      path:     '/',
+      maxAge:   60 * 60 * 24 * 7,
       sameSite: 'lax',
       secure,
       httpOnly: true,
     })
   }
 
-  return NextResponse.json({ success: true })
+  return res
 }
 
-// DELETE /api/auth/set-session — called by sign-out
+// DELETE — clear session cookies
 export async function DELETE() {
-  const cookieStore = cookies()
-  cookieStore.delete('sb-access-token')
-  cookieStore.delete('sb-refresh-token')
-  return NextResponse.json({ success: true })
+  const res = NextResponse.json({ success: true })
+  res.cookies.set('sb-access-token',  '', { path: '/', maxAge: 0 })
+  res.cookies.set('sb-refresh-token', '', { path: '/', maxAge: 0 })
+  return res
 }
