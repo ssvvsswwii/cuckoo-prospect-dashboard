@@ -36,6 +36,7 @@ export async function middleware(request: NextRequest) {
   if (!session && isDashboardRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
+    url.searchParams.set('from', 'middleware')
     return NextResponse.redirect(url)
   }
 

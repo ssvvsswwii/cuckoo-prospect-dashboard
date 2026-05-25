@@ -5,7 +5,7 @@ import Sidebar from '@/components/ui/Sidebar'
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login')
+  if (!user) redirect('/auth/login?from=layout-nouser')
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile || profile.status !== 'active') {
     await supabase.auth.signOut()
-    redirect('/auth/login?reason=inactive')
+    redirect('/auth/login?from=layout-inactive')
   }
 
   return (
