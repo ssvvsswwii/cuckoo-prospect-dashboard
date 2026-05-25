@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Profile, Branch, UserStatus, Role } from '@/lib/types'
+import { updateUser } from '@/app/dashboard/actions'
 
 const STATUS_STYLES: Record<UserStatus, string> = {
   pending:  'bg-yellow-100 text-yellow-700',
@@ -18,7 +18,9 @@ const ROLE_LABELS: Record<Role, string> = {
 }
 
 export default function UsersTable({
-  profiles, branches, currentUserId
+  profiles,
+  branches,
+  currentUserId,
 }: {
   profiles: (Profile & { branch?: { name: string } })[]
   branches: Branch[]
@@ -27,10 +29,12 @@ export default function UsersTable({
   const router  = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
-  async function updateUser(id: string, updates: Partial<{ status: UserStatus; role: Role; branch_id: string }>) {
-    setLoading(id)
-    const supabase = createClient()
-    await supabase.from('profiles').update(updates).eq('id', id)
+  async function handleUpdate(
+    p: Profile,
+    updates: Partial<{ status: UserStatus; role: Role; branch_id: string }>
+  ) {
+    setLoading(p.id)
+    await updateUser(p.id, updates, p.full_name || p.email || p.id)
     setLoading(null)
     router.refresh()
   }
@@ -57,19 +61,19 @@ export default function UsersTable({
                 <select
                   value={p.role}
                   disabled={p.id === currentUserId || loading === p.id}
-                  onChange={e => updateUser(p.id, { role: e.target.value as Role })}
+                  onChange={e => handleUpdate(p, { role: e.target.value as Role })}
                   className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-brand disabled:opacity-50"
                 >
-                  <option value="client_consultant">Client Consultant</option>
-                  <option value="branch_manager">Branch Manager</option>
-                  <option value="admin">Admin</option>
+                  {(Object.keys(ROLE_LABELS) as Role[]).map(r => (
+                    <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                  ))}
                 </select>
               </td>
               <td className="px-5 py-3">
                 <select
                   value={p.branch_id ?? ''}
                   disabled={loading === p.id}
-                  onChange={e => updateUser(p.id, { branch_id: e.target.value || undefined })}
+                  onChange={e => handleUpdate(p, { branch_id: e.target.value || undefined })}
                   className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-brand disabled:opacity-50"
                 >
                   <option value="">— No Branch —</option>
@@ -79,32 +83,32 @@ export default function UsersTable({
                 </select>
               </td>
               <td className="px-5 py-3">
-                <span className={`badge ${STATUS_STYLES[p.status]}`}>
+                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_STYLES[p.status]}`}>
                   {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
                 </span>
               </td>
               <td className="px-5 py-3 text-gray-400 whitespace-nowrap">
-                {new Date(p.created_at).toLocaleDateString('en-MY')}
+                {new Date(p.created_at).toLocaleDateString('en-GB')}
               </td>
               <td className="px-5 py-3">
                 {p.id !== currentUserId && (
                   <div className="flex gap-2">
                     {p.status !== 'active' && (
                       <button
-                        onClick={() => updateUser(p.id, { status: 'active' })}
+                        onClick={() => handleUpdate(p, { status: 'active' })}
                         disabled={loading === p.id}
                         className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg font-semibold disabled:opacity-50"
                       >
-                        Activate
+                        {loading === p.id ? '…' : 'Activate'}
                       </button>
                     )}
                     {p.status === 'active' && (
                       <button
-                        onClick={() => updateUser(p.id, { status: 'inactive' })}
+                        onClick={() => handleUpdate(p, { status: 'inactive' })}
                         disabled={loading === p.id}
                         className="text-xs bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg font-semibold disabled:opacity-50"
                       >
-                        Deactivate
+                        {loading === p.id ? '…' : 'Deactivate'}
                       </button>
                     )}
                   </div>

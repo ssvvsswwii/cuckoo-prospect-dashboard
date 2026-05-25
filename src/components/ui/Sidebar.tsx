@@ -7,8 +7,9 @@ import { clearSession } from '@/app/auth/actions'
 
 const navItems = (role: string) => {
   const base = [
-    { href: '/dashboard',          label: 'Prospects',  icon: '👥' },
-    { href: '/dashboard/qr-code',  label: 'QR Code',    icon: '📱' },
+    { href: '/dashboard',           label: 'Prospects',    icon: '👥' },
+    { href: '/dashboard/qr-code',   label: 'QR Code',      icon: '📱' },
+    { href: '/dashboard/activity',  label: 'Activity Log', icon: '📋' },
   ]
   if (role === 'branch_manager' || role === 'admin') {
     base.push({ href: '/dashboard/branches', label: 'Branches', icon: '🏢' })
