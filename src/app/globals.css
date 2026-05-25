@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #7e171b;
+  --brand-dark: #5c1013;
+  --brand-light: #fdf2f2;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+/* Status badge helpers */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+}
