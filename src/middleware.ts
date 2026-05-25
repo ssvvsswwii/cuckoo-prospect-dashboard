@@ -1,48 +1,24 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value)
-          })
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) => {
-            supabaseResponse.cookies.set(name, value, options)
-          })
-        },
-      },
-    }
+  // Check if any Supabase auth cookie exists (set by browser client after login)
+  const hasSession = request.cookies.getAll().some(
+    c => c.name.startsWith('sb-') && c.name.includes('auth-token')
   )
 
-  // Use getSession() in middleware (fast, no network call)
-  // Actual secure getUser() validation happens inside server components
-  const { data: { session } } = await supabase.auth.getSession()
-
-  const isAuthRoute      = request.nextUrl.pathname.startsWith('/auth')
-  const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
-
-  // No session → protect dashboard routes
-  if (!session && isDashboardRoute) {
+  // Protect dashboard — redirect to login if no cookie found
+  if (!hasSession && pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
-  // Has session → don't let them see auth pages
-  if (session && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+  // Do NOT redirect /auth → /dashboard here.
+  // The login page handles the redirect after sign-in client-side.
+  // Avoiding this prevents the redirect loop caused by cookie reading
+  // differences between middleware (Edge) and server components (Node.js).
 
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {
