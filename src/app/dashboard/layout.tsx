@@ -7,7 +7,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Use getSession() to read from cookies directly (no network call)
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) redirect('/auth/login?from=layout-nosession')
+  if (!session) redirect('/auth/login')
 
   const user = session.user
 
@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!profile || profile.status !== 'active') {
     await supabase.auth.signOut()
-    redirect('/auth/login?from=layout-inactive')
+    redirect('/auth/login')
   }
 
   return (

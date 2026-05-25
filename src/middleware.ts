@@ -34,17 +34,12 @@ export async function middleware(request: NextRequest) {
 
   // No session → protect dashboard routes
   if (!session && isDashboardRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
-    url.searchParams.set('from', 'middleware')
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
   // Has session → don't let them see auth pages
   if (session && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return supabaseResponse
