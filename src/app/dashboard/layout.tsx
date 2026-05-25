@@ -1,4 +1,4 @@
-import { getSessionUser, createClient } from '@/lib/supabase/server'
+import { getSessionUser, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Sidebar from '@/components/ui/Sidebar'
 
@@ -8,7 +8,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = getSessionUser()
   if (!user) redirect('/auth/login')
 
-  const supabase = createClient()
+  // Use admin client so RLS never blocks the layout query
+  const supabase = createAdminClient()
   const { data: profile } = await supabase
     .from('profiles')
     .select('*, branch:branches(name)')
