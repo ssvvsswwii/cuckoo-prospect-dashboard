@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function UsersPage() {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session!.user
 
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user!.id).single()
   if (me?.role !== 'admin') redirect('/dashboard')

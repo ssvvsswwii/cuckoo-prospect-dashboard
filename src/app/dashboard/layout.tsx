@@ -4,8 +4,12 @@ import Sidebar from '@/components/ui/Sidebar'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth/login?from=layout-nouser')
+
+  // Use getSession() to read from cookies directly (no network call)
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) redirect('/auth/login?from=layout-nosession')
+
+  const user = session.user
 
   const { data: profile } = await supabase
     .from('profiles')
