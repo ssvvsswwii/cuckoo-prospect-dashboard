@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { Profile } from '@/lib/types'
+import { clearSession } from '@/app/auth/actions'
 
 const navItems = (role: string) => {
   const base = [
@@ -28,8 +29,7 @@ export default function Sidebar({ profile }: { profile: Profile & { branch?: { n
   const pathname = usePathname()
 
   async function signOut() {
-    await fetch('/api/auth/set-session', { method: 'DELETE' })
-    window.location.href = '/auth/login'
+    await clearSession()
   }
 
   return (
